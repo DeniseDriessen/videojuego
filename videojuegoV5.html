@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hockey Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(20, 20px);
+            grid-template-rows: repeat(20, 20px);
+            gap: 2px;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            background-color: black;
+            position: relative; /* Para posicionar elementos hijos */
+        }
+        .player {
+            background-color: blue;
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+        }
+        .puck {
+            background-color: red;
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+        }
+        .goal {
+            background-color: white;
+            border: 2px solid gray;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center h-screen">
+    <h1 class="text-4xl mb-4">Hockey Game</h1>
+    <div class="game-board" id="gameBoard"></div>
+    <div class="mt-4">
+        <p class="text-lg">Puntuación: <span id="score">0</span></p>
+    </div>
+    <div class="mt-4">
+        <p class="text-lg">Instrucciones:</p>
+        <ul class="list-disc list-inside">
+            <li>Usa las flechas del teclado para mover al jugador.</li>
+            <li>Golpea el disco (puck) hacia la portería para anotar.</li>
+        </ul>
+    </div>
+
+    <!-- Audio para la música de fondo -->
+    <audio id="backgroundMusic" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
+
+    <script>
+        const gameBoard = document.getElementById('gameBoard');
+        const scoreDisplay = document.getElementById('score');
+        const boardSize = 20;
+        let player = { x: 10, y: 18 };
+        let puck = { x: 10, y: 10 };
+        let goal = { x: 10, y: 0 };
+        let score = 0;
+
+        // Iniciar música de fondo
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        backgroundMusic.play();
+
+        function createBoard() {
+            gameBoard.innerHTML = ''; // Limpiar el tablero antes de renderizar
+            for (let y = 0; y < boardSize; y++) {
+                for (let x = 0; x < boardSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    gameBoard.appendChild(cell);
+
+                    // Renderizar jugador
+                    if (x === player.x && y === player.y) {
+                        const playerElement = document.createElement('div');
+                        playerElement.classList.add('player');
+                        cell.appendChild(playerElement);
+                    }
+
+                    // Renderizar disco
+                    if (x === puck.x && y === puck.y) {
+                        const puckElement = document.createElement('div');
+                        puckElement.classList.add('puck');
+                        cell.appendChild(puckElement);
+                    }
+
+                    // Renderizar portería
+                    if (x === goal.x && y === goal.y) {
+                        const goalElement = document.createElement('div');
+                        goalElement.classList.add('goal');
+                        cell.appendChild(goalElement);
+                    }
+                }
+            }
+        }
+
+        function movePlayer(event) {
+            const key = event.key;
+            let newX = player.x;
+            let newY = player.y;
+
+            if (key === 'ArrowUp' && player.y > 0) newY--;
+            if (key === 'ArrowDown' && player.y < boardSize - 1) newY++;
+            if (key === 'ArrowLeft' && player.x > 0) newX--;
+            if (key === 'ArrowRight' && player.x < boardSize - 1) newX++;
+
+            player.x = newX;
+            player.y = newY;
+            updateBoard();
+            checkPuckCollision();
+        }
+
+        function checkPuckCollision() {
+            if (player.x === puck.x && player.y === puck.y) {
+                movePuck();
+            }
+        }
+
+        function movePuck() {
+            const dx = puck.x - player.x;
+            const dy = puck.y - player.y;
+
+            puck.x += dx;
+            puck.y += dy;
+
+            // Asegurarse de que el disco no salga del tablero
+            if (puck.x < 0) puck.x = 0;
+            if (puck.x >= boardSize) puck.x = boardSize - 1;
+            if (puck.y < 0) puck.y = 0;
+            if (puck.y >= boardSize) puck.y = boardSize - 1;
+
+            updateBoard();
+            checkGoal();
+        }
+
+        function checkGoal() {
+            if (puck.x === goal.x && puck.y === goal.y) {
+                score++;
+                scoreDisplay.textContent = score;
+                resetPuck();
+            }
+        }
+
+        function resetPuck() {
+            puck.x = 10;
+            puck.y = 10;
+            updateBoard();
+        }
+
+        function updateBoard() {
+            createBoard(); // Volver a renderizar el tablero
+        }
+
+        document.addEventListener('keydown', movePlayer);
+        createBoard(); // Renderizar el tablero inicial
+    </script>
+</body>
+</html>
